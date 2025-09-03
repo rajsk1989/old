@@ -377,15 +377,22 @@
                 <a href="messho.html" class="menu-item">
                     <i class="fas fa-chart-line"></i>
                     <span>Meesho</span>
+
+</a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Flipkart</span>
+                </a>
+
                 </a>
                 <a href="amazon.html" class="menu-item">
                     <i class="fas fa-exchange-alt"></i>
                     <span>Amazone</span>
                 </a>
                 
-                <a href="#" class="menu-item">
+                <a href="support.html" class="menu-item">
                     <i class="fas fa-cog"></i>
-                    <span>Settings</span>
+                    <span>Support</span>
                 </a>
             </div>
             
@@ -868,134 +875,152 @@
                 }, 2000);
             }
             
-            // Download PDF functionality
-            downloadBtn.addEventListener('click', function() {
-                if (!processedData || !processedData.summary) {
-                    alert('Please process data first before downloading the report');
-                    return;
+             // Download PDF functionality
+    downloadBtn.addEventListener('click', function() {
+        if (!processedData || !processedData.summary) {
+            alert('Please process data first before downloading the report');
+            return;
+        }
+        
+        // Ask user for confirmation before downloading
+        if (confirm('Do you want to save the PDF report to your device?')) {
+            // Create PDF document in landscape orientation for better fit
+            const doc = new jsPDF('landscape');
+            
+            // Add title
+            doc.setFontSize(20);
+            doc.setTextColor(40, 40, 40);
+            doc.text('Orders Data Analysis Report', 145, 15, { align: 'center' });
+            
+            // Add date
+            doc.setFontSize(12);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 145, 23, { align: 'center' });
+            
+            // Add summary section
+            doc.setFontSize(16);
+            doc.setTextColor(40, 40, 40);
+            doc.text('Summary', 15, 35);
+            
+            doc.setFontSize(10); // Smaller font for better fit
+            doc.setTextColor(80, 80, 80);
+            
+            // Add summary data in two columns
+            const summary = processedData.summary;
+            let yPosition = 45;
+            
+            // First column
+            doc.text(`Total Orders: ${summary.totalOrders}`, 15, yPosition);
+            yPosition += 6;
+            doc.text(`Delivered Orders: ${summary.deliveredCount}`, 15, yPosition);
+            yPosition += 6;
+            doc.text(`Customer Return: ${summary.customerReturnCount}`, 15, yPosition);
+            yPosition += 6;
+            doc.text(`Courier Return: ${summary.courierReturnCount}`, 15, yPosition);
+            yPosition += 6;
+            doc.text(`Total Sales Amount: ₹${summary.totalSales.toFixed(2)}`, 15, yPosition);
+            yPosition += 6;
+            doc.text(`Total Offer Amount: ₹${summary.totalOfferAmount.toFixed(2)}`, 15, yPosition);
+            yPosition += 6;
+            doc.text(`Total My Share Amount: ₹${summary.totalMyShareAmount.toFixed(2)}`, 15, yPosition);
+            yPosition += 6;
+            doc.text(`Total Customer Addon: ₹${summary.totalCustomerAddon.toFixed(2)}`, 15, yPosition);
+            
+            // Second column
+            yPosition = 45;
+            doc.text(`Total Marketplace Fees: ₹${summary.totalMarketplaceFees.toFixed(2)}`, 120, yPosition);
+            yPosition += 6;
+            doc.text(`Total Return Charges: ₹${summary.totalReturnCharges.toFixed(2)}`, 120, yPosition);
+            yPosition += 6;
+            doc.text(`Total Ads Cost: ₹${summary.totalAdsCost.toFixed(2)}`, 120, yPosition);
+            yPosition += 6;
+            doc.text(`Total TCS Amount: ₹${summary.totalTCS.toFixed(2)}`, 120, yPosition);
+            yPosition += 6;
+            doc.text(`Total TDS Amount: ₹${summary.totalTDS.toFixed(2)}`, 120, yPosition);
+            yPosition += 6;
+            doc.text(`Total GST Amount: ₹${summary.totalGST.toFixed(2)}`, 120, yPosition);
+            yPosition += 6;
+            
+            // Revenue with color coding
+            const revenueText = `Net Revenue: ₹${summary.totalRevenue.toFixed(2)}`;
+            if (summary.totalRevenue >= 0) {
+                doc.setTextColor(40, 167, 69); // Green for positive
+            } else {
+                doc.setTextColor(220, 53, 69); // Red for negative
+            }
+            doc.text(revenueText, 120, yPosition);
+            doc.setTextColor(80, 80, 80); // Reset color
+            
+            // Add detailed data table on a new page
+            doc.addPage();
+            
+            // Add table title
+            doc.setFontSize(16);
+            doc.setTextColor(40, 40, 40);
+            doc.text('Detailed Order Data', 145, 15, { align: 'center' });
+            
+            // Prepare table data with abbreviated headers for better fit
+            const tableData = processedData.map(item => [
+                item.orderId,
+                item.returnType,
+                item.saleAmount,
+                item.offerAmount,
+                item.myShareAmount,
+                item.customerAddon,
+                item.marketplaceFees,
+                item.returnCharges,
+                item.tcsAmount,
+                item.tdsAmount,
+                item.gstAmount
+            ]);
+            
+            // Add table with adjusted column widths and smaller font
+            doc.autoTable({
+                startY: 20,
+                head: [['Order ID', 'Return', 'Sales', 'Offer', 'My Share', 'Addon', 'Fees', 'Return Chgs', 'TCS', 'TDS', 'GST']],
+                body: tableData,
+                theme: 'grid',
+                headStyles: {
+                    fillColor: [106, 17, 203],
+                    textColor: 255,
+                    fontSize: 8
+                },
+                bodyStyles: {
+                    fontSize: 7,
+                    cellWidth: 'wrap'
+                },
+                styles: {
+                    overflow: 'linebreak',
+                    cellWidth: 'auto',
+                    halign: 'center'
+                },
+                margin: { top: 20 },
+                tableWidth: 'auto',
+                columnStyles: {
+                    0: {cellWidth: 25},
+                    1: {cellWidth: 20},
+                    2: {cellWidth: 20},
+                    3: {cellWidth: 20},
+                    4: {cellWidth: 20},
+                    5: {cellWidth: 20},
+                    6: {cellWidth: 20},
+                    7: {cellWidth: 20},
+                    8: {cellWidth: 20},
+                    9: {cellWidth: 20},
+                    10: {cellWidth: 20}
                 }
-                
-                // Create PDF document in landscape orientation for better fit
-                const doc = new jsPDF('landscape');
-                
-                // Add title
-                doc.setFontSize(20);
-                doc.setTextColor(40, 40, 40);
-                doc.text('Orders Data Analysis Report', 145, 15, { align: 'center' });
-                
-                // Add date
-                doc.setFontSize(12);
-                doc.setTextColor(100, 100, 100);
-                doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 145, 23, { align: 'center' });
-                
-                // Add summary section
-                doc.setFontSize(16);
-                doc.setTextColor(40, 40, 40);
-                doc.text('Summary', 15, 35);
-                
-                doc.setFontSize(10); // Smaller font for better fit
-                doc.setTextColor(80, 80, 80);
-                
-                // Add summary data in two columns
-                const summary = processedData.summary;
-                let yPosition = 45;
-                
-                // First column
-                doc.text(`Total Orders: ${summary.totalOrders}`, 15, yPosition);
-                yPosition += 6;
-                doc.text(`Delivered Orders: ${summary.deliveredCount}`, 15, yPosition);
-                yPosition += 6;
-                doc.text(`Customer Return: ${summary.customerReturnCount}`, 15, yPosition);
-                yPosition += 6;
-                doc.text(`Courier Return: ${summary.courierReturnCount}`, 15, yPosition);
-                yPosition += 6;
-                doc.text(`Total Sales Amount: ₹${summary.totalSales.toFixed(2)}`, 15, yPosition);
-                yPosition += 6;
-                doc.text(`Total Offer Amount: ₹${summary.totalOfferAmount.toFixed(2)}`, 15, yPosition);
-                yPosition += 6;
-                doc.text(`Total My Share Amount: ₹${summary.totalMyShareAmount.toFixed(2)}`, 15, yPosition);
-                yPosition += 6;
-                doc.text(`Total Customer Addon: ₹${summary.totalCustomerAddon.toFixed(2)}`, 15, yPosition);
-                
-                // Second column
-                yPosition = 45;
-                doc.text(`Total Marketplace Fees: ₹${summary.totalMarketplaceFees.toFixed(2)}`, 80, yPosition);
-                yPosition += 6;
-                doc.text(`Total Return Charges: ₹${summary.totalReturnCharges.toFixed(2)}`, 80, yPosition);
-                yPosition += 6;
-                doc.text(`Total Ads Cost: ₹${summary.totalAdsCost.toFixed(2)}`, 80, yPosition);
-                yPosition += 6;
-                doc.text(`Total TCS Amount: ₹${summary.totalTCS.toFixed(2)}`, 80, yPosition);
-                yPosition += 6;
-                doc.text(`Total TDS Amount: ₹${summary.totalTDS.toFixed(2)}`, 80, yPosition);
-                yPosition += 6;
-                doc.text(`Total GST Amount: ₹${summary.totalGST.toFixed(2)}`, 80, yPosition);
-                yPosition += 6;
-                doc.text(`Net Revenue: ₹${summary.totalRevenue.toFixed(2)}`, 80, yPosition);
-                
-                // Add detailed data table on a new page
-                doc.addPage();
-                
-                // Add table title
-                doc.setFontSize(16);
-                doc.setTextColor(40, 40, 40);
-                doc.text('Detailed Order Data', 145, 15, { align: 'center' });
-                
-                // Prepare table data with abbreviated headers for better fit
-                const tableData = processedData.map(item => [
-                    item.orderId,
-                    item.returnType,
-                    item.saleAmount,
-                    item.offerAmount,
-                    item.myShareAmount,
-                    item.customerAddon,
-                    item.marketplaceFees,
-                    item.returnCharges,
-                    item.tcsAmount,
-                    item.tdsAmount,
-                    item.gstAmount
-                ]);
-                
-                // Add table with adjusted column widths and smaller font
-                doc.autoTable({
-                    startY: 20,
-                    head: [['Order ID', 'Return', 'Sales', 'Offer', 'My Share', 'Addon', 'Fees', 'Return Chgs', 'TCS', 'TDS', 'GST']],
-                    body: tableData,
-                    theme: 'grid',
-                    headStyles: {
-                        fillColor: [106, 17, 203],
-                        textColor: 255,
-                        fontSize: 8
-                    },
-                    bodyStyles: {
-                        fontSize: 7,
-                        cellWidth: 'wrap'
-                    },
-                    styles: {
-                        overflow: 'linebreak',
-                        cellWidth: 'auto',
-                        halign: 'center'
-                    },
-                    margin: { top: 20 },
-                    tableWidth: 'auto',
-                    columnStyles: {
-                        0: {cellWidth: 25},
-                        1: {cellWidth: 20},
-                        2: {cellWidth: 20},
-                        3: {cellWidth: 20},
-                        4: {cellWidth: 20},
-                        5: {cellWidth: 20},
-                        6: {cellWidth: 20},
-                        7: {cellWidth: 20},
-                        8: {cellWidth: 20},
-                        9: {cellWidth: 20},
-                        10: {cellWidth: 20}
-                    }
-                });
-                
-                // Save PDF
-                doc.save('orders-analysis-report.pdf');
             });
+            
+            // Save PDF with a descriptive filename including date
+            const dateStr = new Date().toISOString().slice(0, 10);
+            const filename = `orders-analysis-report-${dateStr}.pdf`;
+            doc.save(filename);
+            
+            // Show confirmation message
+            alert(`PDF report has been saved as "${filename}" on your device`);
+        }
+    });
+
             
             // Drag and drop functionality
             uploadArea.addEventListener('dragover', function(e) {

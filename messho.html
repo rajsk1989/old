@@ -132,7 +132,7 @@
 
         .upload-area i {
             font-size: 3rem;
-            color: '₹6a11cb';
+            color: #6a11cb;
             margin-bottom: 15px;
         }
 
@@ -225,7 +225,7 @@
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 20px;
-            display: none; /* Hidden as requested */
+            display: none;
         }
 
         .report-stats {
@@ -305,7 +305,6 @@
             padding: 15px;
             margin: 20px 0;
             border-radius: 4px;
-           
         }
 
         .instructions h4 {
@@ -322,7 +321,7 @@
             color: #6c757d;
         }
 
-         .positive-revenue {
+        .positive-revenue {
             color: #28a745 !important;
         }
 
@@ -363,18 +362,24 @@
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Meesho</span>
+                </a>
+</a>
                 <a href="flipkart.html" class="menu-item">
                     <i class="fas fa-chart-line"></i>
                     <span>Flipkart</span>
                 </a>
+
                 <a href="amazon.html" class="menu-item">
                     <i class="fas fa-exchange-alt"></i>
-                    <span>Amazone</span>
+                    <span>Amazon</span>
                 </a>
                 
-                <a href="#" class="menu-item">
+                <a href="support.html" class="menu-item">
                     <i class="fas fa-cog"></i>
-                    <span>Settings</span>
+                    <span>Support</span>
                 </a>
             </div>
             
@@ -383,9 +388,7 @@
                     <h2>Upload Excel File</h2>
                     
                     <div class="instructions">
-                        <h4>Download Meesho Previous payment Excel file from meesho platfrom:</h4>
-                        
-                            
+                        <h4>Download Meesho Previous payment Excel file from Meesho platform:</h4>
                     </div>
                     
                     <div class="upload-area" id="uploadArea">
@@ -414,7 +417,7 @@
                             <div class="value" id="deliveredOrders">0</div>
                         </div>
                         <div class="stat-card">
-                            <h3>CUSTOMER RETURNED </h3>
+                            <h3>CUSTOMER RETURNED</h3>
                             <div class="value" id="returnedOrders">0</div>
                         </div>
                         <div class="stat-card">
@@ -508,9 +511,6 @@
     </div>
 
     <script>
-        // Initialize jsPDF
-        const { jsPDF } = window.jspdf;
-        
         document.addEventListener('DOMContentLoaded', function() {
             const uploadArea = document.getElementById('uploadArea');
             const fileInput = document.getElementById('fileInput');
@@ -826,7 +826,7 @@
                 // Ask user for confirmation before downloading
                 if (confirm('Do you want to save the PDF report to your device?')) {
                     // Create PDF document in landscape mode for better table fit
-                    const doc = new jsPDF('landscape', 'pt', 'a4');
+                    const doc = new jspdf.jsPDF('landscape', 'pt', 'a4');
                     const pageWidth = doc.internal.pageSize.getWidth();
                     const pageHeight = doc.internal.pageSize.getHeight();
                     const margin = 40;
@@ -898,9 +898,9 @@
                     yPosition += 30;
                     
                     // Add detailed data table
-                    doc.setFontSize(16);
+                    doc.setFontSize(0);
                     doc.setTextColor(40, 40, 40);
-                    doc.text('Detailed Data', margin, yPosition);
+                    
                     yPosition += 20;
                     
                     // Prepare table data
