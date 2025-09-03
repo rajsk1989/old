@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Data Processor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        header {
+            background: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            min-height: 500px;
+        }
+
+        .sidebar {
+            flex: 1;
+            min-width: 250px;
+            background: #2c3e50;
+            color: white;
+            padding: 25px;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+            text-decoration: none;
+            color: white;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            text-decoration: none;
+            color: white;
+        }
+
+        .menu-item i {
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+
+        .main-content {
+            flex: 3;
+            min-width: 300px;
+            padding: 25px;
+            background: #f8f9fa;
+        }
+
+        .upload-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+
+        .upload-section h2 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .upload-area {
+            border: 2px dashed #6a11cb;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 25px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            background: rgba(106, 17, 203, 0.05);
+        }
+
+        .upload-area i {
+            font-size: 3rem;
+            color: #6a11cb;
+            margin-bottom: 15px;
+        }
+
+        .upload-area h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .upload-area p {
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .browse-btn {
+            background: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .browse-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .selected-file {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .selected-file i {
+            color: #28a745;
+            margin-right: 10px;
+        }
+
+        .generate-btn {
+            display: block;
+            width: 100%;
+            background: linear-gradient(to right, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .generate-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .report-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            display: none;
+        }
+
+        .report-section h2 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .report-preview {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none; /* Hidden as requested */
+        }
+
+        .report-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 200px;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            color: #6c757d;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+
+        .stat-card .value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .download-btn {
+            display: block;
+            width: 100%;
+            background: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            display: none;
+            font-size: 0.8rem;
+            table-layout: fixed;
+        }
+
+        .data-table th, .data-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            word-wrap: break-word;
+        }
+
+        .data-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            font-size: 0.75rem;
+        }
+
+        .data-table tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .instructions {
+            background-color: #f8f9fa;
+            border-left: 4px solid #6a11cb;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            
+        }
+
+        .instructions h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+            color: #6c757d;
+        }
+        .positive-revenue {
+            color: #28a745 !important;
+        }
+
+        .negative-revenue {
+            color: #dc3545 !important;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+            }
+            
+            .upload-area {
+                padding: 20px;
+            }
+            
+            .report-stats {
+                flex-direction: column;
+            }
+            
+            .data-table {
+                font-size: 0.7rem;
+            }
+            
+            .data-table th, .data-table td {
+                padding: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Excel Data Processor - Orders Analysis</h1>
+            <p>Upload your Excel file to analyze data from Orders and Ads sheets</p>
+        </header>
+        
+        <div class="dashboard">
+            <div class="sidebar">
+                <h2>Menu</h2>
+                <a href="index.html" class="menu-item">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="messho.html" class="menu-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Meesho</span>
+                </a>
+                <a href="amazon.html" class="menu-item">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Amazone</span>
+                </a>
+                
+                <a href="#" class="menu-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </div>
+            
+            <div class="main-content">
+                <div class="upload-section">
+                    <h2>Upload Excel File</h2>
+                    
+                    <div class="instructions">
+                        <h4>Download Flipkart Previous payment Excel file from Flipkart platfrom:</h4>
+                        
+                    </div>
+                    
+                    <div class="upload-area" id="uploadArea">
+                        <i class="fas fa-file-excel"></i>
+                        <h3>Drag & Drop your Excel file here</h3>
+                        <p>Supported formats: .xls, .xlsx, .csv</p>
+                        <button class="browse-btn">Browse Files</button>
+                        <input type="file" id="fileInput" class="file-input" accept=".xls,.xlsx,.csv">
+                    </div>
+                    <div class="selected-file" id="selectedFile">
+                        <i class="fas fa-check-circle"></i>
+                        <span id="fileName">File selected: financial_data.xlsx</span>
+                    </div>
+                    <button class="generate-btn" id="generateBtn" disabled>Process Data</button>
+                </div>
+                
+                <div class="report-section" id="reportSection">
+                    <h2>Data Analysis Results</h2>
+                    <div class="report-stats">
+                        <div class="stat-card">
+                            <h3>TOTAL ORDERS</h3>
+                            <div class="value" id="totalOrders">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>DELIVERED ORDERS</h3>
+                            <div class="value" id="deliveredOrders">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>CUSTOMER RETURN</h3>
+                            <div class="value" id="customerReturn">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>COURIER RETURN</h3>
+                            <div class="value" id="courierReturn">0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="report-stats">
+                        <div class="stat-card">
+                            <h3>TOTAL SALE AMOUNT</h3>
+                            <div class="value" id="totalSales">₹0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>TOTAL OFFER AMOUNT</h3>
+                            <div class="value" id="totalOfferAmount">₹0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>TOTAL MY SHARE AMOUNT</h3>
+                            <div class="value" id="totalMyShareAmount">₹0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>TOTAL CUSTOMER ADDON</h3>
+                            <div class="value" id="totalCustomerAddon">₹0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="report-stats">
+                        <div class="stat-card">
+                            <h3>TOTAL MARKETPLACE FEES</h3>
+                            <div class="value" id="totalMarketplaceFees">₹0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>TOTAL RETURN CHARGES</h3>
+                            <div class="value" id="totalReturnCharges">₹0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>TOTAL ADS COST</h3>
+                            <div class="value" id="totalAdsCost">₹0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>TOTAL TCS AMOUNT</h3>
+                            <div class="value" id="totalTCS">₹0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="report-stats">
+                        <div class="stat-card">
+                            <h3>TOTAL TDS AMOUNT</h3>
+                            <div class="value" id="totalTDS">₹0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>TOTAL GST AMOUNT</h3>
+                            <div class="value" id="totalGST">₹0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>TOTAL REVENUE</h3>
+                            <div class="value" id="totalRevenue">₹0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="report-preview">
+                        <h3>Data Summary</h3>
+                        <p>Your Excel data has been successfully processed. The analysis includes calculations of order status, sales amount, offer amount, my share amount, customer addon, marketplace fees, return charges, ads cost, TCS, TDS, GST, and net revenue.</p>
+                        <p>Key metrics:</p>
+                        <ul>
+                            <li>Total Orders: <span id="summaryOrders">0</span> (Delivered + Customer Return + Courier Return)</li>
+                            <li>Delivered Orders: <span id="summaryDelivered">0</span></li>
+                            <li>Customer Return: <span id="summaryCustomerReturn">0</span></li>
+                            <li>Courier Return: <span id="summaryCourierReturn">0</span></li>
+                            <li>Total Sales Amount: ₹<span id="summarySales">0</span></li>
+                            <li>Total Offer Amount: ₹<span id="summaryOfferAmount">0</span></li>
+                            <li>Total My Share Amount: ₹<span id="summaryMyShareAmount">0</span></li>
+                            <li>Total Customer Addon: ₹<span id="summaryCustomerAddon">0</span></li>
+                            <li>Total Marketplace Fees: ₹<span id="summaryMarketplaceFees">0</span></li>
+                            <li>Total Return Charges: ₹<span id="summaryReturnCharges">0</span></li>
+                            <li>Total Ads Cost: ₹<span id="summaryAdsCost">0</span></li>
+                            <li>Total TCS Amount: ₹<span id="summaryTCS">0</span></li>
+                            <li>Total TDS Amount: ₹<span id="summaryTDS">0</span></li>
+                            <li>Total GST Amount: ₹<span id="summaryGST">0</span></li>
+                            <li>Net Revenue: ₹<span id="summaryRevenue">0</span> (Sales + Marketplace Fees + TCS + TDS + GST + Return Charges + Ads Cost + Offer Amount + My Share Amount + Customer Addon)</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="overflow-x: auto;">
+                        <table class="data-table" id="dataTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 10%">Order ID</th>
+                                    <th style="width: 10%">Return Type</th>
+                                    <th style="width: 8%">Sale Amount</th>
+                                    <th style="width: 8%">Offer Amount</th>
+                                    <th style="width: 8%">My Share</th>
+                                    <th style="width: 8%">Customer Addon</th>
+                                    <th style="width: 8%">Marketplace Fees</th>
+                                    <th style="width: 8%">Return Charges</th>
+                                    <th style="width: 8%">TCS</th>
+                                    <th style="width: 8%">TDS</th>
+                                    <th style="width: 8%">GST</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <button class="download-btn" id="downloadBtn">
+                        <i class="fas fa-download"></i> Download Full Report (PDF)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize jsPDF
+        const { jsPDF } = window.jspdf;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const selectedFile = document.getElementById('selectedFile');
+            const fileName = document.getElementById('fileName');
+            const generateBtn = document.getElementById('generateBtn');
+            const reportSection = document.getElementById('reportSection');
+            const dataTable = document.getElementById('dataTable');
+            const downloadBtn = document.getElementById('downloadBtn');
+            
+            // Result elements
+            const totalOrdersEl = document.getElementById('totalOrders');
+            const deliveredOrdersEl = document.getElementById('deliveredOrders');
+            const customerReturnEl = document.getElementById('customerReturn');
+            const courierReturnEl = document.getElementById('courierReturn');
+            const totalSalesEl = document.getElementById('totalSales');
+            const totalOfferAmountEl = document.getElementById('totalOfferAmount');
+            const totalMyShareAmountEl = document.getElementById('totalMyShareAmount');
+            const totalCustomerAddonEl = document.getElementById('totalCustomerAddon');
+            const totalMarketplaceFeesEl = document.getElementById('totalMarketplaceFees');
+            const totalReturnChargesEl = document.getElementById('totalReturnCharges');
+            const totalAdsCostEl = document.getElementById('totalAdsCost');
+            const totalTCSEl = document.getElementById('totalTCS');
+            const totalTDSEl = document.getElementById('totalTDS');
+            const totalGSTEl = document.getElementById('totalGST');
+            const totalRevenueEl = document.getElementById('totalRevenue');
+            
+            // Summary elements
+            const summaryOrdersEl = document.getElementById('summaryOrders');
+            const summaryDeliveredEl = document.getElementById('summaryDelivered');
+            const summaryCustomerReturnEl = document.getElementById('summaryCustomerReturn');
+            const summaryCourierReturnEl = document.getElementById('summaryCourierReturn');
+            const summarySalesEl = document.getElementById('summarySales');
+            const summaryOfferAmountEl = document.getElementById('summaryOfferAmount');
+            const summaryMyShareAmountEl = document.getElementById('summaryMyShareAmount');
+            const summaryCustomerAddonEl = document.getElementById('summaryCustomerAddon');
+            const summaryMarketplaceFeesEl = document.getElementById('summaryMarketplaceFees');
+            const summaryReturnChargesEl = document.getElementById('summaryReturnCharges');
+            const summaryAdsCostEl = document.getElementById('summaryAdsCost');
+            const summaryTCSEl = document.getElementById('summaryTCS');
+            const summaryTDSEl = document.getElementById('summaryTDS');
+            const summaryGSTEl = document.getElementById('summaryGST');
+            const summaryRevenueEl = document.getElementById('summaryRevenue');
+            
+            let excelData = null;
+            let adsData = null;
+            let processedData = null;
+            
+            // Click on upload area to trigger file input
+            uploadArea.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            // Browse button to trigger file input
+            uploadArea.querySelector('.browse-btn').addEventListener('click', function(e) {
+                e.stopPropagation();
+                fileInput.click();
+            });
+            
+            // Handle file selection
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    const file = this.files[0];
+                    fileName.textContent = `File selected: ${file.name}`;
+                    selectedFile.style.display = 'block';
+                    generateBtn.disabled = false;
+                    
+                    // Read the Excel file
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        
+                        // Check if Orders sheet exists
+                        if (!workbook.SheetNames.includes('Orders')) {
+                            alert('Orders sheet not found in the Excel file');
+                            generateBtn.disabled = true;
+                            return;
+                        }
+                        
+                        // Get Orders sheet data
+                        const ordersWorksheet = workbook.Sheets['Orders'];
+                        excelData = XLSX.utils.sheet_to_json(ordersWorksheet, { header: 1 });
+                        
+                        // Get Ads sheet data if available
+                        if (workbook.SheetNames.includes('Ads')) {
+                            const adsWorksheet = workbook.Sheets['Ads'];
+                            adsData = XLSX.utils.sheet_to_json(adsWorksheet, { header: 1 });
+                        } else {
+                            adsData = [];
+                        }
+                    };
+                    reader.readAsArrayBuffer(file);
+                    
+                    // Process data when generate button is clicked
+                    generateBtn.addEventListener('click', processExcelData);
+                }
+            });
+            
+            // Process Excel data function
+            function processExcelData() {
+                if (!excelData || excelData.length < 2) {
+                    alert('No data found in Orders sheet');
+                    return;
+                }
+                
+                generateBtn.disabled = true;
+                generateBtn.textContent = 'Processing Data...';
+                
+                // Simulate processing delay
+                setTimeout(function() {
+                    // Extract data from specific columns starting from row 2
+                    let deliveredCount = 0;
+                    let customerReturnCount = 0;
+                    let courierReturnCount = 0;
+                    let totalSales = 0;
+                    let totalOfferAmount = 0;
+                    let totalMyShareAmount = 0;
+                    let totalCustomerAddon = 0;
+                    let totalMarketplaceFees = 0;
+                    let totalReturnCharges = 0;
+                    let totalTCS = 0;
+                    let totalTDS = 0;
+                    let totalGST = 0;
+                    
+                    // Clear table
+                    const tbody = dataTable.querySelector('tbody');
+                    tbody.innerHTML = '';
+                    
+                    // Store processed data for PDF
+                    processedData = [];
+                    
+                    // Process each row starting from index 1 (row 2 in Excel)
+                    for (let i = 1; i < excelData.length; i++) {
+                        const row = excelData[i];
+                        
+                        // Get values from specific columns
+                        const orderId = row[7]; // Column H (index 7)
+                        const returnType = row[62]; // Column BK (index 62)
+                        const saleAmount = row[9]; // Column J (index 9)
+                        const offerAmount = row[10]; // Column K (index 10)
+                        const myShareAmount = row[11]; // Column L (index 11)
+                        const customerAddon = row[12]; // Column M (index 12)
+                        const marketplaceFees = row[13]; // Column N (index 13)
+                        const returnCharges = row[17]; // Column R (index 17)
+                        const tcsAmount = row[36]; // Column AK (index 36)
+                        const tdsAmount = row[37]; // Column AL (index 37)
+                        const gstAmount = row[38]; // Column AM (index 38)
+                        
+                        // Process return type
+                        if (returnType) {
+                            const returnTypeStr = returnType.toString().toLowerCase();
+                            if (returnTypeStr === 'na') deliveredCount++;
+                            else if (returnTypeStr.includes('customer')) customerReturnCount++;
+                            else if (returnTypeStr.includes('logistics')) courierReturnCount++;
+                        }
+                        
+                        // Process sale amount
+                        if (saleAmount !== undefined && saleAmount !== null && saleAmount !== '') {
+                            totalSales += parseFloat(saleAmount) || 0;
+                        }
+                        
+                        // Process offer amount
+                        if (offerAmount !== undefined && offerAmount !== null && offerAmount !== '') {
+                            totalOfferAmount += parseFloat(offerAmount) || 0;
+                        }
+                        
+                        // Process my share amount
+                        if (myShareAmount !== undefined && myShareAmount !== null && myShareAmount !== '') {
+                            totalMyShareAmount += parseFloat(myShareAmount) || 0;
+                        }
+                        
+                        // Process customer addon
+                        if (customerAddon !== undefined && customerAddon !== null && customerAddon !== '') {
+                            totalCustomerAddon += parseFloat(customerAddon) || 0;
+                        }
+                        
+                        // Process marketplace fees
+                        if (marketplaceFees !== undefined && marketplaceFees !== null && marketplaceFees !== '') {
+                            totalMarketplaceFees += parseFloat(marketplaceFees) || 0;
+                        }
+                        
+                        // Process return charges
+                        if (returnCharges !== undefined && returnCharges !== null && returnCharges !== '') {
+                            totalReturnCharges += parseFloat(returnCharges) || 0;
+                        }
+                        
+                        // Process TCS amount
+                        if (tcsAmount !== undefined && tcsAmount !== null && tcsAmount !== '') {
+                            totalTCS += parseFloat(tcsAmount) || 0;
+                        }
+                        
+                        // Process TDS amount
+                        if (tdsAmount !== undefined && tdsAmount !== null && tdsAmount !== '') {
+                            totalTDS += parseFloat(tdsAmount) || 0;
+                        }
+                        
+                        // Process GST amount
+                        if (gstAmount !== undefined && gstAmount !== null && gstAmount !== '') {
+                            totalGST += parseFloat(gstAmount) || 0;
+                        }
+                        
+                        // Add row to table
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${orderId || 'N/A'}</td>
+                            <td>${returnType || 'N/A'}</td>
+                            <td>${saleAmount !== undefined && saleAmount !== null && saleAmount !== '' ? '₹' + parseFloat(saleAmount).toFixed(2) : 'N/A'}</td>
+                            <td>${offerAmount !== undefined && offerAmount !== null && offerAmount !== '' ? '₹' + parseFloat(offerAmount).toFixed(2) : 'N/A'}</td>
+                            <td>${myShareAmount !== undefined && myShareAmount !== null && myShareAmount !== '' ? '₹' + parseFloat(myShareAmount).toFixed(2) : 'N/A'}</td>
+                            <td>${customerAddon !== undefined && customerAddon !== null && customerAddon !== '' ? '₹' + parseFloat(customerAddon).toFixed(2) : 'N/A'}</td>
+                            <td>${marketplaceFees !== undefined && marketplaceFees !== null && marketplaceFees !== '' ? '₹' + parseFloat(marketplaceFees).toFixed(2) : 'N/A'}</td>
+                            <td>${returnCharges !== undefined && returnCharges !== null && returnCharges !== '' ? '₹' + parseFloat(returnCharges).toFixed(2) : 'N/A'}</td>
+                            <td>${tcsAmount !== undefined && tcsAmount !== null && tcsAmount !== '' ? '₹' + parseFloat(tcsAmount).toFixed(2) : 'N/A'}</td>
+                            <td>${tdsAmount !== undefined && tdsAmount !== null && tdsAmount !== '' ? '₹' + parseFloat(tdsAmount).toFixed(2) : 'N/A'}</td>
+                            <td>${gstAmount !== undefined && gstAmount !== null && gstAmount !== '' ? '₹' + parseFloat(gstAmount).toFixed(2) : 'N/A'}</td>
+                        `;
+                        tbody.appendChild(tr);
+                        
+                        // Store data for PDF
+                        processedData.push({
+                            orderId: orderId || 'N/A',
+                            returnType: returnType || 'N/A',
+                            saleAmount: saleAmount !== undefined && saleAmount !== null && saleAmount !== '' ? '₹' + parseFloat(saleAmount).toFixed(2) : 'N/A',
+                            offerAmount: offerAmount !== undefined && offerAmount !== null && offerAmount !== '' ? '₹' + parseFloat(offerAmount).toFixed(2) : 'N/A',
+                            myShareAmount: myShareAmount !== undefined && myShareAmount !== null && myShareAmount !== '' ? '₹' + parseFloat(myShareAmount).toFixed(2) : 'N/A',
+                            customerAddon: customerAddon !== undefined && customerAddon !== null && customerAddon !== '' ? '₹' + parseFloat(customerAddon).toFixed(2) : 'N/A',
+                            marketplaceFees: marketplaceFees !== undefined && marketplaceFees !== null && marketplaceFees !== '' ? '₹' + parseFloat(marketplaceFees).toFixed(2) : 'N/A',
+                            returnCharges: returnCharges !== undefined && returnCharges !== null && returnCharges !== '' ? '₹' + parseFloat(returnCharges).toFixed(2) : 'N/A',
+                            tcsAmount: tcsAmount !== undefined && tcsAmount !== null && tcsAmount !== '' ? '₹' + parseFloat(tcsAmount).toFixed(2) : 'N/A',
+                            tdsAmount: tdsAmount !== undefined && tdsAmount !== null && tdsAmount !== '' ? '₹' + parseFloat(tdsAmount).toFixed(2) : 'N/A',
+                            gstAmount: gstAmount !== undefined && gstAmount !== null && gstAmount !== '' ? '₹' + parseFloat(gstAmount).toFixed(2) : 'N/A'
+                        });
+                    }
+                    
+                    // Calculate total ads cost from Ads sheet
+                    let totalAdsCost = 0;
+                    if (adsData && adsData.length > 1) {
+                        for (let i = 1; i < adsData.length; i++) {
+                            const row = adsData[i];
+                            const adsCost = row[2]; // Column C (index 2)
+                            
+                            if (adsCost !== undefined && adsCost !== null && adsCost !== '') {
+                                totalAdsCost += parseFloat(adsCost) || 0;
+                            }
+                        }
+                    }
+                    
+                    // Calculate total orders
+                    const totalOrders = deliveredCount + customerReturnCount + courierReturnCount;
+                    
+                    // Calculate total revenue
+                    const totalRevenue = totalSales + (totalMarketplaceFees + totalTCS + totalTDS + totalGST + totalReturnCharges + totalAdsCost + totalOfferAmount + totalMyShareAmount + totalCustomerAddon);
+                     // Apply color to revenue based on positive/negative value
+                    if (totalRevenue >= 0) {
+                        totalRevenueEl.className = 'value positive-revenue';
+                    } else {
+                        totalRevenueEl.className = 'value negative-revenue';
+                    }
+                    totalRevenueEl.textContent = '₹' + Math.abs(totalRevenue).toFixed(2);
+                    // Update UI with results
+                    totalOrdersEl.textContent = totalOrders;
+                    deliveredOrdersEl.textContent = deliveredCount;
+                    customerReturnEl.textContent = customerReturnCount;
+                    courierReturnEl.textContent = courierReturnCount;
+                    totalSalesEl.textContent = '₹' + totalSales.toFixed(2);
+                    totalOfferAmountEl.textContent = '₹' + totalOfferAmount.toFixed(2);
+                    totalMyShareAmountEl.textContent = '₹' + totalMyShareAmount.toFixed(2);
+                    totalCustomerAddonEl.textContent = '₹' + totalCustomerAddon.toFixed(2);
+                    totalMarketplaceFeesEl.textContent = '₹' + totalMarketplaceFees.toFixed(2);
+                    totalReturnChargesEl.textContent = '₹' + totalReturnCharges.toFixed(2);
+                    totalAdsCostEl.textContent = '₹' + totalAdsCost.toFixed(2);
+                    totalTCSEl.textContent = '₹' + totalTCS.toFixed(2);
+                    totalTDSEl.textContent = '₹' + totalTDS.toFixed(2);
+                    totalGSTEl.textContent = '₹' + totalGST.toFixed(2);
+                    totalRevenueEl.textContent = '₹' + totalRevenue.toFixed(2);
+                    
+                    // Update summary
+                    summaryOrdersEl.textContent = totalOrders;
+                    summaryDeliveredEl.textContent = deliveredCount;
+                    summaryCustomerReturnEl.textContent = customerReturnCount;
+                    summaryCourierReturnEl.textContent = courierReturnCount;
+                    summarySalesEl.textContent = totalSales.toFixed(2);
+                    summaryOfferAmountEl.textContent = totalOfferAmount.toFixed(2);
+                    summaryMyShareAmountEl.textContent = totalMyShareAmount.toFixed(2);
+                    summaryCustomerAddonEl.textContent = totalCustomerAddon.toFixed(2);
+                    summaryMarketplaceFeesEl.textContent = totalMarketplaceFees.toFixed(2);
+                    summaryReturnChargesEl.textContent = totalReturnCharges.toFixed(2);
+                    summaryAdsCostEl.textContent = totalAdsCost.toFixed(2);
+                    summaryTCSEl.textContent = totalTCS.toFixed(2);
+                    summaryTDSEl.textContent = totalTDS.toFixed(2);
+                    summaryGSTEl.textContent = totalGST.toFixed(2);
+                    summaryRevenueEl.textContent = totalRevenue.toFixed(2);
+                    
+                    // Store summary data for PDF
+                    processedData.summary = {
+                        totalOrders,
+                        deliveredCount,
+                        customerReturnCount,
+                        courierReturnCount,
+                        totalSales,
+                        totalOfferAmount,
+                        totalMyShareAmount,
+                        totalCustomerAddon,
+                        totalMarketplaceFees,
+                        totalReturnCharges,
+                        totalAdsCost,
+                        totalTCS,
+                        totalTDS,
+                        totalGST,
+                        totalRevenue
+                    };
+                    
+                    // Show results
+                    reportSection.style.display = 'block';
+                    dataTable.style.display = 'table';
+                    generateBtn.textContent = 'Process New Data';
+                    generateBtn.disabled = false;
+                    
+                    // Scroll to report section
+                    reportSection.scrollIntoView({ behavior: 'smooth' });
+                }, 2000);
+            }
+            
+            // Download PDF functionality
+            downloadBtn.addEventListener('click', function() {
+                if (!processedData || !processedData.summary) {
+                    alert('Please process data first before downloading the report');
+                    return;
+                }
+                
+                // Create PDF document in landscape orientation for better fit
+                const doc = new jsPDF('landscape');
+                
+                // Add title
+                doc.setFontSize(20);
+                doc.setTextColor(40, 40, 40);
+                doc.text('Orders Data Analysis Report', 145, 15, { align: 'center' });
+                
+                // Add date
+                doc.setFontSize(12);
+                doc.setTextColor(100, 100, 100);
+                doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 145, 23, { align: 'center' });
+                
+                // Add summary section
+                doc.setFontSize(16);
+                doc.setTextColor(40, 40, 40);
+                doc.text('Summary', 15, 35);
+                
+                doc.setFontSize(10); // Smaller font for better fit
+                doc.setTextColor(80, 80, 80);
+                
+                // Add summary data in two columns
+                const summary = processedData.summary;
+                let yPosition = 45;
+                
+                // First column
+                doc.text(`Total Orders: ${summary.totalOrders}`, 15, yPosition);
+                yPosition += 6;
+                doc.text(`Delivered Orders: ${summary.deliveredCount}`, 15, yPosition);
+                yPosition += 6;
+                doc.text(`Customer Return: ${summary.customerReturnCount}`, 15, yPosition);
+                yPosition += 6;
+                doc.text(`Courier Return: ${summary.courierReturnCount}`, 15, yPosition);
+                yPosition += 6;
+                doc.text(`Total Sales Amount: ₹${summary.totalSales.toFixed(2)}`, 15, yPosition);
+                yPosition += 6;
+                doc.text(`Total Offer Amount: ₹${summary.totalOfferAmount.toFixed(2)}`, 15, yPosition);
+                yPosition += 6;
+                doc.text(`Total My Share Amount: ₹${summary.totalMyShareAmount.toFixed(2)}`, 15, yPosition);
+                yPosition += 6;
+                doc.text(`Total Customer Addon: ₹${summary.totalCustomerAddon.toFixed(2)}`, 15, yPosition);
+                
+                // Second column
+                yPosition = 45;
+                doc.text(`Total Marketplace Fees: ₹${summary.totalMarketplaceFees.toFixed(2)}`, 80, yPosition);
+                yPosition += 6;
+                doc.text(`Total Return Charges: ₹${summary.totalReturnCharges.toFixed(2)}`, 80, yPosition);
+                yPosition += 6;
+                doc.text(`Total Ads Cost: ₹${summary.totalAdsCost.toFixed(2)}`, 80, yPosition);
+                yPosition += 6;
+                doc.text(`Total TCS Amount: ₹${summary.totalTCS.toFixed(2)}`, 80, yPosition);
+                yPosition += 6;
+                doc.text(`Total TDS Amount: ₹${summary.totalTDS.toFixed(2)}`, 80, yPosition);
+                yPosition += 6;
+                doc.text(`Total GST Amount: ₹${summary.totalGST.toFixed(2)}`, 80, yPosition);
+                yPosition += 6;
+                doc.text(`Net Revenue: ₹${summary.totalRevenue.toFixed(2)}`, 80, yPosition);
+                
+                // Add detailed data table on a new page
+                doc.addPage();
+                
+                // Add table title
+                doc.setFontSize(16);
+                doc.setTextColor(40, 40, 40);
+                doc.text('Detailed Order Data', 145, 15, { align: 'center' });
+                
+                // Prepare table data with abbreviated headers for better fit
+                const tableData = processedData.map(item => [
+                    item.orderId,
+                    item.returnType,
+                    item.saleAmount,
+                    item.offerAmount,
+                    item.myShareAmount,
+                    item.customerAddon,
+                    item.marketplaceFees,
+                    item.returnCharges,
+                    item.tcsAmount,
+                    item.tdsAmount,
+                    item.gstAmount
+                ]);
+                
+                // Add table with adjusted column widths and smaller font
+                doc.autoTable({
+                    startY: 20,
+                    head: [['Order ID', 'Return', 'Sales', 'Offer', 'My Share', 'Addon', 'Fees', 'Return Chgs', 'TCS', 'TDS', 'GST']],
+                    body: tableData,
+                    theme: 'grid',
+                    headStyles: {
+                        fillColor: [106, 17, 203],
+                        textColor: 255,
+                        fontSize: 8
+                    },
+                    bodyStyles: {
+                        fontSize: 7,
+                        cellWidth: 'wrap'
+                    },
+                    styles: {
+                        overflow: 'linebreak',
+                        cellWidth: 'auto',
+                        halign: 'center'
+                    },
+                    margin: { top: 20 },
+                    tableWidth: 'auto',
+                    columnStyles: {
+                        0: {cellWidth: 25},
+                        1: {cellWidth: 20},
+                        2: {cellWidth: 20},
+                        3: {cellWidth: 20},
+                        4: {cellWidth: 20},
+                        5: {cellWidth: 20},
+                        6: {cellWidth: 20},
+                        7: {cellWidth: 20},
+                        8: {cellWidth: 20},
+                        9: {cellWidth: 20},
+                        10: {cellWidth: 20}
+                    }
+                });
+                
+                // Save PDF
+                doc.save('orders-analysis-report.pdf');
+            });
+            
+            // Drag and drop functionality
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.style.background = 'rgba(106, 17, 203, 0.1)';
+                uploadArea.style.borderColor = '#2575fc';
+            });
+            
+            uploadArea.addEventListener('dragleave', function() {
+                uploadArea.style.background = '';
+                uploadArea.style.borderColor = '#6a11cb';
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.style.background = '';
+                uploadArea.style.borderColor = '#6a11cb';
+                
+                if (e.dataTransfer.files.length > 0) {
+                    fileInput.files = e.dataTransfer.files;
+                    const event = new Event('change');
+                    fileInput.dispatchEvent(event);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
