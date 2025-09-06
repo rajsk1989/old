@@ -366,7 +366,6 @@
                     <i class="fas fa-chart-line"></i>
                     <span>Meesho</span>
                 </a>
-</a>
                 <a href="flipkart.html" class="menu-item">
                     <i class="fas fa-chart-line"></i>
                     <span>Flipkart</span>
@@ -428,6 +427,25 @@
                     
                     <div class="report-stats">
                         <div class="stat-card">
+                            <h3>CANCELLED ORDERS</h3>
+                            <div class="value" id="cancelledOrders">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>EXCHANGE ORDERS</h3>
+                            <div class="value" id="exchangeOrders">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>SHIPPED ORDERS</h3>
+                            <div class="value" id="shippedOrders">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>OTHER STATUS</h3>
+                            <div class="value" id="otherOrders">0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="report-stats">
+                        <div class="stat-card">
                             <h3>TOTAL SALE AMOUNT</h3>
                             <div class="value" id="totalSales">₹0</div>
                         </div>
@@ -469,10 +487,14 @@
                         <p>Your Excel data has been successfully processed. The analysis includes calculations of order status, sales amount, return charges, shipping charges, TCS, TDS, ads cost, and net revenue.</p>
                         <p>Key metrics:</p>
                         <ul>
-                            <li>Total Orders: <span id="summaryOrders">0</span> (Delivered + Returned + RTO)</li>
+                            <li>Total Orders: <span id="summaryOrders">0</span> (Delivered + Returned + RTO + Cancelled + Exchange + Shipped + Other)</li>
                             <li>Delivered Orders: <span id="summaryDelivered">0</span></li>
                             <li>Returned Orders: <span id="summaryReturned">0</span></li>
                             <li>RTO Orders: <span id="summaryRTO">0</span></li>
+                            <li>Cancelled Orders: <span id="summaryCancelled">0</span></li>
+                            <li>Exchange Orders: <span id="summaryExchange">0</span></li>
+                            <li>Shipped Orders: <span id="summaryShipped">0</span></li>
+                            <li>Other Status Orders: <span id="summaryOther">0</span></li>
                             <li>Total Sales Amount: ₹<span id="summarySales">0</span></li>
                             <li>Total Sale Return Amount: ₹<span id="summarySaleReturns">0</span></li>
                             <li>Net Sales Amount: ₹<span id="summaryNetSales">0</span> (Sales - Sale Returns)</li>
@@ -526,6 +548,10 @@
             const deliveredOrdersEl = document.getElementById('deliveredOrders');
             const returnedOrdersEl = document.getElementById('returnedOrders');
             const rtoOrdersEl = document.getElementById('rtoOrders');
+            const cancelledOrdersEl = document.getElementById('cancelledOrders');
+            const exchangeOrdersEl = document.getElementById('exchangeOrders');
+            const shippedOrdersEl = document.getElementById('shippedOrders');
+            const otherOrdersEl = document.getElementById('otherOrders');
             const totalSalesEl = document.getElementById('totalSales');
             const totalSaleReturnsEl = document.getElementById('totalSaleReturns');
             const netSalesEl = document.getElementById('netSales');
@@ -540,6 +566,10 @@
             const summaryDeliveredEl = document.getElementById('summaryDelivered');
             const summaryReturnedEl = document.getElementById('summaryReturned');
             const summaryRTOEl = document.getElementById('summaryRTO');
+            const summaryCancelledEl = document.getElementById('summaryCancelled');
+            const summaryExchangeEl = document.getElementById('summaryExchange');
+            const summaryShippedEl = document.getElementById('summaryShipped');
+            const summaryOtherEl = document.getElementById('summaryOther');
             const summarySalesEl = document.getElementById('summarySales');
             const summarySaleReturnsEl = document.getElementById('summarySaleReturns');
             const summaryNetSalesEl = document.getElementById('summaryNetSales');
@@ -646,6 +676,10 @@
                     let deliveredCount = 0;
                     let returnedCount = 0;
                     let rtoCount = 0;
+                    let cancelledCount = 0;
+                    let exchangeCount = 0;
+                    let shippedCount = 0;
+                    let otherCount = 0;
                     let totalSales = 0;
                     let totalSaleReturns = 0;
                     let totalShippingCharges = 0;
@@ -683,6 +717,10 @@
                             if (status.includes('deliver')) deliveredCount++;
                             else if (status.includes('return')) returnedCount++;
                             else if (status.includes('rto')) rtoCount++;
+                            else if (status.includes('cancel')) cancelledCount++;
+                            else if (status.includes('exchange')) exchangeCount++;
+                            else if (status.includes('ship')) shippedCount++;
+                            else otherCount++;
                         }
                         
                         // Process sale amount
@@ -742,8 +780,8 @@
                         });
                     }
                     
-                    // Calculate total orders (Delivered + Returned + RTO)
-                    const totalOrders = deliveredCount + returnedCount + rtoCount;
+                    // Calculate total orders (Delivered + Returned + RTO + Cancelled + Exchange + Shipped + Other)
+                    const totalOrders = deliveredCount + returnedCount + rtoCount + cancelledCount + exchangeCount + shippedCount + otherCount;
                     
                     // Calculate net sales (Total Sale Amount - Total Sale Return Amount)
                     const netSales = totalSales + totalSaleReturns;
@@ -766,6 +804,10 @@
                     deliveredOrdersEl.textContent = deliveredCount;
                     returnedOrdersEl.textContent = returnedCount;
                     rtoOrdersEl.textContent = rtoCount;
+                    cancelledOrdersEl.textContent = cancelledCount;
+                    exchangeOrdersEl.textContent = exchangeCount;
+                    shippedOrdersEl.textContent = shippedCount;
+                    otherOrdersEl.textContent = otherCount;
                     totalSalesEl.textContent = '₹' + totalSales.toFixed(2);
                     totalSaleReturnsEl.textContent = '₹' + totalSaleReturns.toFixed(2);
                     netSalesEl.textContent = '₹' + netSales.toFixed(2);
@@ -780,6 +822,10 @@
                     summaryDeliveredEl.textContent = deliveredCount;
                     summaryReturnedEl.textContent = returnedCount;
                     summaryRTOEl.textContent = rtoCount;
+                    summaryCancelledEl.textContent = cancelledCount;
+                    summaryExchangeEl.textContent = exchangeCount;
+                    summaryShippedEl.textContent = shippedCount;
+                    summaryOtherEl.textContent = otherCount;
                     summarySalesEl.textContent = totalSales.toFixed(2);
                     summarySaleReturnsEl.textContent = totalSaleReturns.toFixed(2);
                     summaryNetSalesEl.textContent = netSales.toFixed(2);
@@ -795,6 +841,10 @@
                         deliveredCount,
                         returnedCount,
                         rtoCount,
+                        cancelledCount,
+                        exchangeCount,
+                        shippedCount,
+                        otherCount,
                         totalSales,
                         totalSaleReturns,
                         netSales,
@@ -866,6 +916,14 @@
                     doc.text(`Returned Orders: ${summary.returnedCount}`, xPosition, yPosition);
                     yPosition += 15;
                     doc.text(`RTO Orders: ${summary.rtoCount}`, xPosition, yPosition);
+                    yPosition += 15;
+                    doc.text(`Cancelled Orders: ${summary.cancelledCount}`, xPosition, yPosition);
+                    yPosition += 15;
+                    doc.text(`Exchange Orders: ${summary.exchangeCount}`, xPosition, yPosition);
+                    yPosition += 15;
+                    doc.text(`Shipped Orders: ${summary.shippedCount}`, xPosition, yPosition);
+                    yPosition += 15;
+                    doc.text(`Other Status Orders: ${summary.otherCount}`, xPosition, yPosition);
                     yPosition += 15;
                     doc.text(`Total Sales Amount: ₹${summary.totalSales.toFixed(2)}`, xPosition, yPosition);
                     yPosition += 15;
