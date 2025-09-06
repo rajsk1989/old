@@ -925,14 +925,15 @@
                     yPosition += 15;
                     doc.text(`Other Status Orders: ${summary.otherCount}`, xPosition, yPosition);
                     yPosition += 15;
-                    doc.text(`Total Sales Amount: ₹${summary.totalSales.toFixed(2)}`, xPosition, yPosition);
-                    yPosition += 15;
-                    doc.text(`Total Sale Return Amount: ₹${summary.totalSaleReturns.toFixed(2)}`, xPosition, yPosition);
-                    yPosition += 15;
+                   
                     
                     // Right column
                     xPosition = margin + columnWidth + margin;
                     yPosition = margin + 55;
+                     doc.text(`Total Sales Amount: ₹${summary.totalSales.toFixed(2)}`, xPosition, yPosition);
+                    yPosition += 15;
+                    doc.text(`Total Sale Return Amount: ₹${summary.totalSaleReturns.toFixed(2)}`, xPosition, yPosition);
+                    yPosition += 15;
                     doc.text(`Net Sales Amount: ₹${summary.netSales.toFixed(2)}`, xPosition, yPosition);
                     yPosition += 15;
                     doc.text(`Total Shipping Charges: ₹${summary.totalShipping.toFixed(2)}`, xPosition, yPosition);
