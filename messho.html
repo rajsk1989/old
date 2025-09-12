@@ -329,6 +329,91 @@
             color: #dc3545 !important;
         }
 
+        .profit-loss-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            margin-top: 30px;
+            display: none;
+        }
+
+        .profit-loss-section h2 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .sku-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .sku-table th, .sku-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .sku-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        .sku-table input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .calculate-btn {
+            display: block;
+            width: 100%;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .floating-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(to right, #129e00, #1eff3c);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .floating-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
         @media (max-width: 768px) {
             .dashboard {
                 flex-direction: column;
@@ -344,6 +429,14 @@
             
             .report-stats {
                 flex-direction: column;
+            }
+
+            .floating-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+                font-size: 0.8rem;
             }
         }
     </style>
@@ -528,9 +621,59 @@
                         <i class="fas fa-download"></i> Download Full Report (PDF)
                     </button>
                 </div>
+
+                <!-- New Profit/Loss Section -->
+                <div class="profit-loss-section" id="profitLossSection">
+                    <h2>Calculate Total Profit and Loss</h2>
+                    
+                    <div class="instructions">
+                        <h4>Enter cost prices for delivered SKUs to calculate profit/loss:</h4>
+                        <p>Total Revenue: ₹<span id="revenueForProfit">0</span></p>
+                    </div>
+                    
+                    <table class="sku-table" id="skuTable">
+                        <thead>
+                            <tr>
+                                <th>SKU ID</th>
+                                <th>Quantity</th>
+                                <th>Cost Price (₹)</th>
+                                <th>Total Cost (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- SKU data will be populated here -->
+                        </tbody>
+                    </table>
+                    
+                    <div class="report-stats">
+                        
+                        <div class="stat-card">
+                            <h3>TOTAL REVENUE</h3>
+                            <div class="value" id="totalRevenueForProfit">₹0</div>
+                        </div>
+<div class="stat-card">
+                            <h3>TOTAL COST PRICE</h3>
+                            <div class="value" id="totalCostPrice">₹0</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <h3>PROFIT / LOSS</h3>
+                            <div class="value" id="profitLoss">₹0</div>
+                        </div>
+                    </div>
+                    
+                    <button class="calculate-btn" id="calculateProfitBtn">
+                        <i class="fas fa-calculator"></i> Calculate Profit/Loss
+                    </button>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Floating Button -->
+    <button class="floating-btn" id="checkPnBtn">
+        <i class="fas fa-calcuator"></i> Check P/L
+    </button>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -542,6 +685,14 @@
             const reportSection = document.getElementById('reportSection');
             const dataTable = document.getElementById('dataTable');
             const downloadBtn = document.getElementById('downloadBtn');
+            const profitLossSection = document.getElementById('profitLossSection');
+            const skuTable = document.getElementById('skuTable');
+            const calculateProfitBtn = document.getElementById('calculateProfitBtn');
+            const checkPnBtn = document.getElementById('checkPnBtn');
+            const revenueForProfitEl = document.getElementById('revenueForProfit');
+            const totalCostPriceEl = document.getElementById('totalCostPrice');
+            const totalRevenueForProfitEl = document.getElementById('totalRevenueForProfit');
+            const profitLossEl = document.getElementById('profitLoss');
             
             // Result elements
             const totalOrdersEl = document.getElementById('totalOrders');
@@ -582,6 +733,8 @@
             let excelData = null;
             let adsCostData = null;
             let processedData = null;
+            let deliveredSkus = {};
+            let totalRevenueValue = 0;
             
             // Click on upload area to trigger file input
             uploadArea.addEventListener('click', function() {
@@ -687,6 +840,9 @@
                     let totalTCS = 0;
                     let totalTDS = 0;
                     
+                    // Reset delivered SKUs object
+                    deliveredSkus = {};
+                    
                     // Get total ads cost
                     const totalAdsCost = getAdsCostData();
                     
@@ -703,6 +859,7 @@
                         
                         // Get values from specific columns
                         const subOrderId = row[0]; // Column A
+                        const skuId = row[4]; // Column E
                         const orderStatus = row[5]; // Column F
                         const saleAmount = row[13]; // Column N
                         const saleReturnAmount = row[14]; // Column O
@@ -714,7 +871,18 @@
                         // Process order status
                         if (orderStatus) {
                             const status = orderStatus.toString().toLowerCase();
-                            if (status.includes('deliver')) deliveredCount++;
+                            if (status.includes('deliver')) {
+                                deliveredCount++;
+                                
+                                // Track delivered SKUs for profit/loss calculation
+                                if (skuId) {
+                                    if (deliveredSkus[skuId]) {
+                                        deliveredSkus[skuId]++;
+                                    } else {
+                                        deliveredSkus[skuId] = 1;
+                                    }
+                                }
+                            }
                             else if (status.includes('return')) returnedCount++;
                             else if (status.includes('rto')) rtoCount++;
                             else if (status.includes('cancel')) cancelledCount++;
@@ -790,14 +958,14 @@
                     const totalShipping = totalShippingCharges + totalReturnShipping;
                     
                     // Calculate total revenue (Net Sales - Shipping - TCS - TDS - Ads Cost)
-                    const totalRevenue = netSales + totalShipping + totalTCS + totalTDS + totalAdsCost;
+                    totalRevenueValue = netSales + totalShipping + totalTCS + totalTDS + totalAdsCost;
 
-                    if (totalRevenue >= 0) {
+                    if (totalRevenueValue >= 0) {
                         totalRevenueEl.className = 'value positive-revenue';
                     } else {
                         totalRevenueEl.className = 'value negative-revenue';
                     }
-                    totalRevenueEl.textContent = '₹' + Math.abs(totalRevenue).toFixed(2);
+                    totalRevenueEl.textContent = '₹' + Math.abs(totalRevenueValue).toFixed(2);
                     
                     // Update UI with results
                     totalOrdersEl.textContent = totalOrders;
@@ -815,7 +983,7 @@
                     totalShippingEl.textContent = '₹' + totalShipping.toFixed(2);
                     totalTCSEl.textContent = '₹' + totalTCS.toFixed(2);
                     totalTDSEl.textContent = '₹' + totalTDS.toFixed(2);
-                    totalRevenueEl.textContent = '₹' + totalRevenue.toFixed(2);
+                    totalRevenueEl.textContent = '₹' + totalRevenueValue.toFixed(2);
                     
                     // Update summary
                     summaryOrdersEl.textContent = totalOrders;
@@ -833,7 +1001,7 @@
                     summaryTCSEl.textContent = totalTCS.toFixed(2);
                     summaryTDSEl.textContent = totalTDS.toFixed(2);
                     summaryAdsCostEl.textContent = totalAdsCost.toFixed(2);
-                    summaryRevenueEl.textContent = totalRevenue.toFixed(2);
+                    summaryRevenueEl.textContent = totalRevenueValue.toFixed(2);
                     
                     // Store summary data for PDF
                     processedData.summary = {
@@ -852,7 +1020,7 @@
                         totalTCS,
                         totalTDS,
                         totalAdsCost,
-                        totalRevenue
+                        totalRevenue: totalRevenueValue
                     };
                     
                     // Show results
@@ -860,6 +1028,9 @@
                     dataTable.style.display = 'table';
                     generateBtn.textContent = 'Process New Data';
                     generateBtn.disabled = false;
+                    
+                    // Show floating button
+                    checkPnBtn.style.display = 'flex';
                     
                     // Scroll to report section
                     reportSection.scrollIntoView({ behavior: 'smooth' });
@@ -1048,6 +1219,88 @@
                     const event = new Event('change');
                     fileInput.dispatchEvent(event);
                 }
+            });
+            
+            // Floating button to navigate to profit/loss section
+            checkPnBtn.addEventListener('click', function() {
+                // Populate SKU table
+                populateSkuTable();
+                
+                // Update revenue value in profit/loss section
+                revenueForProfitEl.textContent = totalRevenueValue.toFixed(2);
+                totalRevenueForProfitEl.textContent = '₹' + totalRevenueValue.toFixed(2);
+                
+                // Show profit/loss section
+                profitLossSection.style.display = 'block';
+                
+                // Scroll to profit/loss section
+                profitLossSection.scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            // Populate SKU table with delivered SKUs
+            function populateSkuTable() {
+                const tbody = skuTable.querySelector('tbody');
+                tbody.innerHTML = '';
+                
+                for (const skuId in deliveredSkus) {
+                    if (deliveredSkus.hasOwnProperty(skuId)) {
+                        const quantity = deliveredSkus[skuId];
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${skuId}</td>
+                            <td>${quantity}</td>
+                            <td><input type="number" class="cost-price-input" data-sku="${skuId}" placeholder="Enter cost price"></td>
+                            <td class="sku-total-cost">₹0.00</td>
+                        `;
+                        tbody.appendChild(tr);
+                    }
+                }
+                
+                // Add event listeners to cost price inputs
+                const costInputs = document.querySelectorAll('.cost-price-input');
+                costInputs.forEach(input => {
+                    input.addEventListener('input', calculateSkuTotalCost);
+                });
+            }
+            
+            // Calculate total cost for a SKU
+            function calculateSkuTotalCost(e) {
+                const skuId = e.target.getAttribute('data-sku');
+                const quantity = deliveredSkus[skuId];
+                const costPrice = parseFloat(e.target.value) || 0;
+                const totalCost = quantity * costPrice;
+                
+                // Update the total cost cell
+                const row = e.target.closest('tr');
+                const totalCell = row.querySelector('.sku-total-cost');
+                totalCell.textContent = '₹' + totalCost.toFixed(2);
+            }
+            
+            // Calculate total profit/loss
+            calculateProfitBtn.addEventListener('click', function() {
+                let totalCostPrice = 0;
+                
+                // Calculate total cost price from all SKUs
+                const costInputs = document.querySelectorAll('.cost-price-input');
+                costInputs.forEach(input => {
+                    const costPrice = parseFloat(input.value) || 0;
+                    const skuId = input.getAttribute('data-sku');
+                    const quantity = deliveredSkus[skuId];
+                    totalCostPrice += quantity * costPrice;
+                });
+                
+                // Calculate profit/loss
+                const profitLoss = totalRevenueValue - totalCostPrice;
+                
+                // Update UI
+                totalCostPriceEl.textContent = '₹' + totalCostPrice.toFixed(2);
+                
+                if (profitLoss >= 0) {
+                    profitLossEl.className = 'value positive-revenue';
+                } else {
+                    profitLossEl.className = 'value negative-revenue';
+                }
+                profitLossEl.textContent = '₹' + Math.abs(profitLoss).toFixed(2);
             });
         });
     </script>
